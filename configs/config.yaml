@@ -1,0 +1,34 @@
+project: fraud-detection
+seed: 42
+
+paths:
+  raw_transactions: data/raw/transactions.csv
+  raw_customers: data/raw/customers.csv
+  features: data/processed/features.parquet
+  registry: model_registry
+  reports: reports
+  scoring_input: data/raw/transactions_new.csv
+  scoring_output: data/scored/scored_transactions.csv
+
+data:
+  n_customers: 3000
+  n_days: 120
+  start_date: "2026-01-01"
+  fraud_rate: 0.01          # approx share of fraudulent transactions
+
+split:                       # out-of-time split: never shuffle time-ordered fraud data
+  train_end: "2026-03-15"
+  valid_end: "2026-04-05"    # test = everything after valid_end
+
+costs:
+  review_cost: 5.0           # $ cost for an analyst to review one alert
+  fraud_loss_rate: 1.0       # share of a missed fraud's amount that is lost
+
+model:
+  candidates: [logreg, hgb]
+  primary_metric: pr_auc     # ROC-AUC looks great at 1% prevalence even for weak models
+  max_alert_rate: 0.05       # ops capacity: analysts can't review more than 5% of traffic
+
+monitoring:
+  psi_warn: 0.10
+  psi_alert: 0.25
